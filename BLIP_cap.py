@@ -6,14 +6,13 @@ from torchvision import transforms
 from torchvision.transforms.functional import InterpolationMode
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 ############################# Load BLIP Model ####################################################################
 def load_demo_image(image_size,device):
     img_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/demo.jpg' 
     raw_image = Image.open(requests.get(img_url, stream=True).raw).convert('RGB')   
 
     w,h = raw_image.size
-    display(raw_image.resize((w//5,h//5)))
+    #display(raw_image.resize((w//5,h//5)))
     
     transform = transforms.Compose([
         transforms.Resize((image_size,image_size),interpolation=InterpolationMode.BICUBIC),
@@ -24,25 +23,32 @@ def load_demo_image(image_size,device):
     return image
 
 ############################# Image Captioning ####################################################################
+sys.path.append('/notebooks/BLIP')
+from PIL import Image
+import glob
 from models.blip import blip_decoder
 
 image_size = 384
 image = load_demo_image(image_size=image_size, device=device)
 
-model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth'
+image_dic = {}
+image_list = glob.glob('/notebooks/images/*.jpg')
+for i in image_list :
+    model_url = i
+    image_name = i.split('/')[-1]
+    #model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth'
 
-model = blip_decoder(pretrained=model_url, image_size=image_size, vit='base')
-model.eval()
-model = model.to(device)
+    model = blip_decoder(pretrained=model_url, image_size=image_size, vit='base')
+    model.eval()
+    model = model.to(device)
 
-with torch.no_grad():
-    # beam search
-    caption = model.generate(image, sample=False, num_beams=3, max_length=20, min_length=5) 
-    # nucleus sampling
-    # caption = model.generate(image, sample=True, top_p=0.9, max_length=20, min_length=5) 
-    print('caption: '+caption[0])
-
-
+    with torch.no_grad():
+        # beam search
+        caption = model.generate(image, sample=False, num_beams=3, max_length=20, min_length=5) 
+        # nucleus sampling
+        # caption = model.generate(image, sample=True, top_p=0.9, max_length=20, min_length=5) 
+        image_dic[image_name] = caption[0]
+        #print('caption: '+caption[0])
 
 
 ############################# Image-Text Matching ##################################################################
@@ -55,7 +61,7 @@ model_url = 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/mo
     
 model = blip_itm(pretrained=model_url, image_size=image_size, vit='base')
 model.eval()
-model = model.to(device='cpu')
+model = model.to(device)
 
 caption = 'a woman sitting on the beach with a dog'
 
