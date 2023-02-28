@@ -43,6 +43,7 @@ def warp_path(cost):
     col = cost.shape[1] - 1
     row = 0
     path =[cost[0,col]]
+    path_idx = [(0,col)]
     while (col > 1):
         while (row < max_row - 1):
             path.append(min(cost[row+1, col],
@@ -58,6 +59,7 @@ def warp_path(cost):
             if (min_idx == 2):
                 row += 1 
                 col -= 1
+            path_idx.append((row,col))
     return(path)
 
 
@@ -69,4 +71,5 @@ cost_matrix = comp_accum_cost_matrix(x, y)
 print (cost_matrix)
 path = warp_path(cost_matrix)
 print (path)
+print(path_idx)
 print(np.sum(path))
