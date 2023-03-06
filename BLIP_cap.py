@@ -56,7 +56,7 @@ def cap_image(image_size=image_size,img_url=img_url_example, device=device):
         # caption = model.generate(image, sample=True, top_p=0.9, max_length=20, min_length=5) 
     return image_name,caption[0]
       
-############################# Image Caption Dic #####################################################################
+############################# Image Caption Dictionary ##############################################################
 image_dic = {}
 image_list = sorted(glob.glob('/notebooks/images/*.jpg'))
 
@@ -71,7 +71,7 @@ caption_list = list(image_dic.values())
 def matching_image_cap(number_cap=len(caption_list), image_list=image_list, caption_list=caption_list, image_size=image_size, device=device):
     #del caption_list
     caption_samp = random.sample(caption_list, k=number_cap)
-    caption_list = order_samp_list(caption_list,caption_samp)
+    #caption_list = order_samp_list(caption_list,caption_samp)
     
     for img_idx, img_url in enumerate(image_list):
         image = load_image(image_size=image_size, img_url=img_url ,device=device)
@@ -85,11 +85,14 @@ def matching_image_cap(number_cap=len(caption_list), image_list=image_list, capt
             itm_output = model(image,cap,match_head='itm')
             itm_score = torch.nn.functional.softmax(itm_output,dim=1)[:,1]
             #print('The image and text is matched with a probability of %.4f'%itm_score)
-            itc_score = model(image,cap,match_head='itc')
+            itc_score = model(image,cap,match_head='itc')*100
             #print('The image feature and text feature has a cosine similarity of %.4f'%itc_score)
+            #itc_score = torch.round(itc_score, decimals = 0)
+            itc_score = itc_score.type(torch.int64)
             dist[img_idx,cap_idx] = itc_score
     return dist, caption_list
 
+######################## Order Sample List ######################################
 def order_samp_list(caption_list,caption_samp):
     
     order_list = np.full_like(caption_list, np.nan, dtype=np.double).astype(str)
@@ -102,7 +105,15 @@ def order_samp_list(caption_list,caption_samp):
     
     return order_list
 
-
+######################## Order Image-Text Matching  ######################################
+def order_samp_list(caption_list, distance_map):
+    
+    match_cap_inx = np.argmax(distance_map, axis = 1)
+    
+    for i in range(len(caption_list)):
+        caption_list[i] = caption_list[match_cap_inx[i]]
+    
+    return caption_list
 
 ############### heat map for validation #########################
 k = 10
@@ -111,15 +122,19 @@ dist = np.zeros((len(caption_list),k))
 distance_map = matching_image_cap(k, image_list, caption_list)[0]
 print(distance_map)
 
-# fig, ax = plt.subplots(figsize=(12, 8))
-# ax = sbn.heatmap(distance_map, annot=True, square=True, linewidths=0.1, cmap="YlGnBu", ax=ax)
-# ax.invert_yaxis()
-
-
-
 fig, ax = plt.subplots(figsize=(10,10))
 im = ax.imshow(distance_map)
 ax.set_title("distances", size=20)
 fig.tight_layout()
-plt.savefig("distance_heatmap.png",
-                    format='png',dpi=150)
+plt.savefig("distance_heatmap.png",format='png',dpi=150)
+
+
+########################### Change to Matchest Caption ########## 
+# caption_list_new = order_samp_list(caption_list, distance_map)
+# distance_map = matching_image_cap(k, image_list, caption_list_new)[0]
+# print(distance_map)
+# fig, ax = plt.subplots(figsize=(10,10))
+# im = ax.imshow(distance_map)
+# ax.set_title("distances", size=20)
+# fig.tight_layout()
+# plt.savefig("distance_heatmap_correct.png",format='png',dpi=150)
