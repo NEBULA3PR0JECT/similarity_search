@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-
+import BLIP_cap as blip_cap
 
 # Computation packages
 from scipy.spatial.distance import euclidean
@@ -16,9 +16,13 @@ def comp_euclid_dist_matrix(x, y) -> np.array:
     #print(dist)
     return dist
 
-def comp_accum_cost_matrix(x, y) -> np.array:
-    distances =  comp_euclid_dist_matrix(x, y)
-
+# def comp_accum_cost_matrix(x, y)
+def comp_accum_cost_matrix(distances) -> np.array:
+    
+    # distances =  comp_euclid_dist_matrix(x, y)
+    
+    y = distance_map[0]
+    x = distance_map[1]
     #Initialization
     cost = np.zeros((len(y), len(x)))
     cost[0, 0] = distances[0, 0]
@@ -60,16 +64,18 @@ def warp_path(cost):
                 row += 1 
                 col -= 1
             path_idx.append((row,col))
-    return(path)
+    sum_path = np.sum(path)
+    return(path, path_idx, sum_path)
 
 
 
 x = [3, 1, 2, 2, 1]
 y = [2, 0, 0, 3, 3, 1, 0]
 
+
 cost_matrix = comp_accum_cost_matrix(x, y)
 print (cost_matrix)
-path = warp_path(cost_matrix)
+path , path_idx , sum_path = warp_path(cost_matrix)
 print (path)
 print(path_idx)
-print(np.sum(path))
+print(sum_path)
