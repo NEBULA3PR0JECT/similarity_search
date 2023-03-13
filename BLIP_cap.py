@@ -37,7 +37,7 @@ def load_image(image_size, img_url, device):
     image = transform(raw_image).unsqueeze(0).to(device)   
     return image
 
-############################# Image Captioning ####################################################################
+############################# Image Captioning ##################################################################
 def cap_image(image_size=image_size,img_url=img_url_example, device=device):
     
     image_name = img_url.split('/')[-1]
@@ -56,20 +56,11 @@ def cap_image(image_size=image_size,img_url=img_url_example, device=device):
         # caption = model.generate(image, sample=True, top_p=0.9, max_length=20, min_length=5) 
     return image_name,caption[0]
       
-############################# Image Caption Dictionary ##############################################################
-image_dic = {}
-image_list = sorted(glob.glob('/notebooks/images/alison/*.jpg'))
+############################# Image-Text Matching ##############################################################
+def matching_image_cap(number_cap, image_list, caption_list, image_size=image_size, device=device):
+    
+    dist = np.zeros((len(caption_list),number_cap))
 
-for img_url in image_list:
-    image_name, caption = cap_image(img_url=img_url)
-    image_dic[image_name] = caption
-
-print ("cap model done")  
-
-caption_list = list(image_dic.values())
-############################# Image-Text Matching ##################################################################
-def matching_image_cap(number_cap=len(caption_list), image_list=image_list, caption_list=caption_list, image_size=image_size, device=device):
-    #del caption_list
     caption_samp = random.sample(caption_list, k=number_cap)
     caption_list = order_samp_list(caption_list,caption_samp)
     
@@ -104,26 +95,3 @@ def order_samp_list(caption_list,caption_samp):
     order_list = order_list[order_list != 'nan']
     
     return order_list
-
-######################## Order Image-Text Matching  ##############
-# def order_cap_list(caption_list, distance_map):
-    
-#     match_cap_inx = np.argmax(distance_map, axis = 1)
-    
-#     for i in range(len(caption_list)):
-#         caption_list[i] = caption_list[match_cap_inx[i]]
-    
-#     return caption_list
-
-############### heat map for validation #########################
-k = 7
-dist = np.zeros((len(caption_list),k))
-
-distance_map = matching_image_cap(k, image_list, caption_list)[0]
-print(distance_map)
-
-fig, ax = plt.subplots(figsize=(10,10))
-im = ax.imshow(distance_map)
-ax.set_title("distances", size=20)
-fig.tight_layout()
-plt.savefig("distance_heatmap_alison.png",format='png',dpi=150)

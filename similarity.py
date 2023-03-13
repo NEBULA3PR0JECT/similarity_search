@@ -66,16 +66,3 @@ def warp_path(cost):
             path_idx.append((row,col))
     sum_path = np.sum(path)
     return(path, path_idx, sum_path)
-
-
-
-x = [3, 1, 2, 2, 1]
-y = [2, 0, 0, 3, 3, 1, 0]
-
-
-cost_matrix = comp_accum_cost_matrix(x, y)
-print (cost_matrix)
-path , path_idx , sum_path = warp_path(cost_matrix)
-print (path)
-print(path_idx)
-print(sum_path)
