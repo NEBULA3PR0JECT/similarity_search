@@ -21,8 +21,8 @@ def comp_accum_cost_matrix(distances) -> np.array:
     
     # distances =  comp_euclid_dist_matrix(x, y)
     
-    y = distance_map[0]
-    x = distance_map[1]
+    y = distances[0]
+    x = distances[1]
     #Initialization
     cost = np.zeros((len(y), len(x)))
     cost[0, 0] = distances[0, 0]
@@ -39,17 +39,18 @@ def comp_accum_cost_matrix(distances) -> np.array:
             cost[i, j] = min(cost[i-1, j],
                              cost[i,j-1],
                              cost[i-1, j-1]) + distances[i,j]
+    cost_pre_flip = cost
     cost = np.flipud(cost)
-    return cost
+    return cost, cost_pre_flip
 
 def warp_path(cost):
-    max_row = cost.shape[0]
+    max_row = cost.shape[0] 
     col = cost.shape[1] - 1
     row = 0
     path =[cost[0,col]]
     path_idx = [(0,col)]
     while (col > 1):
-        while (row < max_row - 1):
+        while (row < (max_row - 1)):
             path.append(min(cost[row+1, col],
                              cost[row,col-1],
                              cost[row+1, col-1]))
